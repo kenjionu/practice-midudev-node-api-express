@@ -5,8 +5,29 @@ const { validateMovie, validatePartialMovie } = require('./schemas/movies')
 // las APIS siempre deben ser un embudo, las apis deben ser robustasm no pueden ser exquisitas a lo que pasas
 
 const app = express()
+const cors = require('cors') // es un middleware es por defecto poner toodo * permitir todo CUIDADO
 app.disable('x-powered-by') // deshabilitar el header X-Powered-By: Express
 app.use(express.json())
+app.use(cors({
+    origin: (origin, callback) => {
+        const ACCEPTED_ORIGINS = [
+            'http://localhost:8080',
+            'http://localhost:1234',
+            'https://movies:com',
+            'https://midu.dev'
+        ]
+        
+        if (ACCEPTED_ORIGINS.includes(origin)) {
+            return callback(null, true)
+        }
+        
+        if (!origin) {
+            return callback(null, true)
+        }
+
+        return callback(new Error('not allowed by CORS'))
+    }
+}))
 
 // metodos normales: GET/HEAD/POST
 // metodos complejos: PUT/PATCH/DELETE
@@ -30,10 +51,6 @@ app.get('/movies', (req, res) => {
     // cuando la petición es del mismo Origin
     // http://localhost:1234 -> http://localhost:1234
     // No te mandara la cabeza de origin
-    const origin = req.header('origin')
-    if( ACCEPTED_ORIGINS.includes(origin) || !origin) {
-        res.header('Access-Control-Allow-Origin', origin)
-    }
     const { genre } = req.query
     if(genre) {
         const filteredMovies = movies.filter(
